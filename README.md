@@ -129,6 +129,28 @@ python "<skill 目录>/scripts/check.py" "<名字>.html" --png "<截图目录>"
 - 折算用的是 Anthropic 官网 2026 年 10 月的 Claude Opus 5.5 API 标价，每百万 token：输入 4 美元，5 分钟缓存写入 5 美元，1 小时缓存写入 8 美元，读取缓存 0.20 美元，输出 20 美元。论文图在主会话里做，缓存写入是 1 小时的；周图由子任务做，缓存写入是 5 分钟的。
 - 用订阅套餐时不按这个价格收费，而是占用套餐的用量额度。占多少要看套餐。
 
+**换成别家模型的标价折算**
+
+把上面同样的 token 数，按别家模型的 API 标价重新折算。价格是 2026 年 10 月 26 日在各家官方价格页上查的，单位是美元每百万 token：
+
+| 模型 | 标价 | 论文图 | 周图每张 | 7 张周图合计 |
+|---|---|---|---|---|
+| Claude Opus 5.5（实际用的） | 输入 4，写入缓存 5 或 8，读取缓存 0.20，输出 20 | $13.26 | $14.81–36.25 | $182.59 |
+| OpenAI `gpt-6-astra` | 输入 10，写入缓存 12.50，读取缓存 1，输出 50；单次输入超过 272K token 时依次是 20、25、2、75 | $52.92 | $75.86–223.73 | $997.92 |
+| Google `gemini-4-argon` | 输入 2，读取缓存 0.10，输出 10；这是 11 月 30 日以前的价格，12 月 1 日起每项翻倍 | $5.87 | $6.88–16.81 | $84.36 |
+| DeepSeek `deepseek-flash`（V4.1-Flash-1017） | 未命中缓存 0.30，命中缓存 0.006，输出 1.20；这是高峰价，非高峰减半 | $0.64 | $0.78–1.85 | $9.51 |
+
+折算的做法：
+
+- 写入缓存：OpenAI 有单独的写入价，按 30 分钟写入算；Gemini 和 DeepSeek 没有，按普通输入（未命中缓存）算。
+- 读取缓存按各家的缓存命中价算，输出按各家的输出价算。
+- OpenAI 逐次调用判断输入有没有超过 272K token，超过的那次按长上下文价算。这几张图里，一半到四分之三的调用超过了 272K。
+- Gemini 4 Argon 从 12 月 1 日起各项翻倍，表里它的数也跟着翻倍。DeepSeek 在非高峰时段的价格是高峰的一半。
+
+这只是价格表上的换算。各家分词方式不同，同样的内容 token 数也不同；换了模型，走的步数和写的长度也会变。
+
+**在别的平台上实际做过的**
+
 同一篇 17 页论文也在别的平台上做过，各做了一张 35 个知识点的图：
 
 - Gemini（Argon 4）：用了 20 美元套餐一周额度的 15%。
@@ -290,6 +312,28 @@ Week 3 includes one failure: the AI tried to write the whole data file in one re
 - Time is measured from the first to the last model call. Output includes the model's thinking.
 - The conversion uses Anthropic's Claude Opus 5.5 API list prices as of October 2026, per million tokens: input $4, 5-minute cache writes $5, 1-hour cache writes $8, cache reads $0.20, output $20. The paper map was made in a main session, whose cache writes are 1-hour writes; the course maps were made by subagents, whose cache writes are 5-minute writes.
 - On a subscription plan you are not charged these prices. The work uses part of the plan's usage limit instead, and how large a part depends on the plan.
+
+**The same usage at other models' list prices**
+
+The same token counts, converted at other models' API list prices. Prices were taken from each vendor's official pricing page on 26 October 2026, in US dollars per million tokens:
+
+| Model | List price | Paper map | Each course map | All 7 course maps |
+|---|---|---|---|---|
+| Claude Opus 5.5 (actually used) | input 4, cache writes 5 or 8, cache reads 0.20, output 20 | $13.26 | $14.81–36.25 | $182.59 |
+| OpenAI `gpt-6-astra` | input 10, cache writes 12.50, cache reads 1, output 50; for requests over 272K input tokens: 20, 25, 2 and 75 | $52.92 | $75.86–223.73 | $997.92 |
+| Google `gemini-4-argon` | input 2, cache reads 0.10, output 10; these are the prices until 30 November, and each doubles from 1 December | $5.87 | $6.88–16.81 | $84.36 |
+| DeepSeek `deepseek-flash` (V4.1-Flash-1017) | cache miss 0.30, cache hit 0.006, output 1.20; these are peak prices, and off-peak is half | $0.64 | $0.78–1.85 | $9.51 |
+
+How the conversion works:
+
+- Cache writes: OpenAI has its own cache-write price, taken as 30-minute writes. Gemini and DeepSeek have none, so cache writes are counted as ordinary (cache-miss) input.
+- Cache reads use each vendor's cache-hit price, and output uses its output price.
+- For OpenAI, each call is checked against 272K input tokens and priced at the long-context rate when it is over. In these runs, half to three quarters of the calls were over.
+- From 1 December every Gemini 4 Argon price doubles, and so do its figures in the table. DeepSeek's off-peak price is half its peak price.
+
+This is only a conversion on the price sheets. Vendors split text into tokens differently, so the same content gives different token counts, and a different model would also take a different number of steps and write different amounts.
+
+**Runs actually made on other platforms**
 
 The same 17-page paper was also mapped on other platforms, one 35-idea map each:
 
