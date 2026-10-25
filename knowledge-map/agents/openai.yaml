@@ -1,0 +1,6 @@
+interface:
+  display_name: "知识关系图"
+  short_description: "把课件、讲义、录播字幕或论文画成能点着看的知识关系图"
+  default_prompt: "使用 $knowledge-map 把这份材料画成知识关系图。"
+policy:
+  allow_implicit_invocation: true

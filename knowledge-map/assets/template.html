@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__KMAP_TITLE__</title>
+<style>
+:root{
+  --bg:#f8f7f3; --card:#ffffff; --ink:#1f2328; --muted:#5d6570; --line:#d9d5cb; --chip:#efede7; --accent:#2b63d9;
+  --e-good:#15803d; --e-bad:#dc2626; --e-part:#6b7280; --e-link:#ea580c; --e-evid:#7c3aed;
+  --z1:#2563eb; --z2:#0e7490; --z3:#a16207; --z4:#be185d; --z5:#475569; --z6:#4338ca; --z7:#0369a1; --z8:#4d7c0f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171b; --card:#1e2127; --ink:#e7e5e1; --muted:#a2a8b2; --line:#3a3f48; --chip:#2a2e35; --accent:#7fa8ff;
+    --e-good:#4ade80; --e-bad:#f87171; --e-part:#9ca3af; --e-link:#fb923c; --e-evid:#a78bfa;
+    --z1:#6ea0ff; --z2:#22d3ee; --z3:#facc15; --z4:#f472b6; --z5:#94a3b8; --z6:#818cf8; --z7:#38bdf8; --z8:#a3e635;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --card:#1e2127; --ink:#e7e5e1; --muted:#a2a8b2; --line:#3a3f48; --chip:#2a2e35; --accent:#7fa8ff;
+  --e-good:#4ade80; --e-bad:#f87171; --e-part:#9ca3af; --e-link:#fb923c; --e-evid:#a78bfa;
+  --z1:#6ea0ff; --z2:#22d3ee; --z3:#facc15; --z4:#f472b6; --z5:#94a3b8; --z6:#818cf8; --z7:#38bdf8; --z8:#a3e635;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif}
+a{color:var(--accent)}
+math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",math;font-size:1.06em}
+.mblock{overflow-x:auto;overflow-y:hidden;margin:8px 0;padding:2px 0}
+.nb{white-space:nowrap}
+code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.88em;background:var(--chip);padding:1px 4px;border-radius:4px}
+
+.top{padding:10px 16px 8px;border-bottom:1px solid var(--line)}
+h1{font-size:1.25em;margin:0}
+.sub{color:var(--muted);font-size:.84em;margin:2px 0 0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:7px}
+.row .lab{font-size:.82em;color:var(--muted);margin-right:2px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 10px;font:inherit;font-size:.82em;cursor:pointer;line-height:1.5}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn[disabled]{opacity:.45;cursor:default}
+.lgd{display:inline}
+.lgd summary{display:inline-block;font-size:.82em;color:var(--muted);cursor:pointer;margin-left:4px}
+.lgd[open] summary{display:none}
+.legend{display:inline-flex;gap:12px;flex-wrap:wrap;font-size:.78em;color:var(--muted);margin-left:8px;vertical-align:middle}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend .lgbox{display:inline-block;width:20px;height:12px;border:1.5px dashed var(--muted);border-radius:3px;vertical-align:middle;margin-right:5px}
+.legend em{font-style:italic;border:1px dashed var(--muted);border-radius:3px;padding:0 3px;margin-right:5px}
+
+#wrap{position:relative;height:calc(100vh - 165px);min-height:440px;overflow:auto;cursor:grab}
+#wrap.drag{cursor:grabbing}
+svg{display:block}
+svg text{font-family:inherit}
+.zone rect{fill:var(--zc);fill-opacity:.06;stroke:var(--zc);stroke-opacity:.35;stroke-width:1.2}
+.zone text{fill:var(--zc);font-size:16px;font-weight:700}
+.zone .zp{font-size:12px;font-weight:400;fill:var(--muted)}
+.node{cursor:pointer}
+.node rect.box{fill:var(--card);stroke:var(--zc);stroke-width:1.6}
+.node.bg rect.box{stroke-dasharray:5 3}
+.node .bar{fill:var(--zc)}
+.node .t{fill:var(--ink);font-size:15px;font-weight:650}
+.node .s{fill:var(--muted);font-size:12px}
+.node:hover rect.box{stroke-width:2.6}
+.node.sel rect.box{stroke-width:3.4}
+.k-good{--ec:var(--e-good)} .k-bad{--ec:var(--e-bad)} .k-part{--ec:var(--e-part)} .k-link{--ec:var(--e-link)} .k-evid{--ec:var(--e-evid)}
+.edge path.v{fill:none;stroke:var(--ec);stroke-width:1.8}
+.edge.k-bad path.v{stroke-dasharray:6 4}
+.edge path.hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.edge .lbg{fill:var(--bg);fill-opacity:.94;stroke:none;cursor:pointer}
+.edge.inf .lbg{stroke:var(--ec);stroke-width:1;stroke-dasharray:3 2}
+.edge text{fill:var(--ec);font-size:12px;font-weight:600;cursor:pointer}
+.edge.inf text{font-style:italic}
+.mk-good{fill:var(--e-good)} .mk-bad{fill:var(--e-bad)} .mk-part{fill:var(--e-part)} .mk-link{fill:var(--e-link)} .mk-evid{fill:var(--e-evid)}
+svg.dim .node:not(.hi){opacity:.16}
+svg.dim .edge:not(.hi){opacity:.07}
+svg.dim .zone{opacity:.5}
+.edge.hi path.v{stroke-width:2.6}
+.edge.cur path.v{stroke-width:4}
+.edge.cur text{font-size:13.5px}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,94vw);background:var(--card);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.16);overflow:auto;z-index:10;padding:14px 18px 48px;transform:translateX(105%);transition:transform .18s ease;font-size:15px;line-height:1.75}
+.drawer.open{transform:none}
+.drawer .x{position:sticky;top:0;float:right;border:none;background:var(--card);color:var(--muted);font-size:1.5em;cursor:pointer;line-height:1;padding:0 4px}
+.drawer h2{font-size:1.25em;margin:4px 0 2px;line-height:1.35}
+.drawer h3{font-size:.8em;color:var(--muted);letter-spacing:.04em;margin:18px 0 4px;font-weight:700}
+.drawer p{margin:6px 0}
+.drawer ul,.drawer ol{margin:4px 0;padding-left:1.3em}
+.drawer li{margin:3px 0}
+.dz{font-size:.8em;font-weight:700;color:var(--zc,var(--muted))}
+.one{font-size:1.05em;font-weight:600;background:var(--chip);border-radius:8px;padding:8px 12px;margin:8px 0}
+.bgnote,.infnote{font-size:.9em;border:1px dashed var(--muted);border-radius:8px;padding:6px 10px;color:var(--muted)}
+details.more{border:1px dashed var(--line);border-radius:8px;padding:4px 12px;margin:12px 0}
+details.more summary{cursor:pointer;color:var(--accent);font-weight:600}
+.src{list-style:none;padding-left:0 !important}
+.src li{font-size:.9em;border-left:3px solid var(--line);padding-left:8px}
+.sk{display:inline-block;font-size:.78em;background:var(--chip);border-radius:5px;padding:0 6px;margin-right:4px}
+.q{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--muted)}
+.sup{background:var(--chip);border-radius:8px;padding:2px 12px 8px;margin-top:14px}
+.rel{border-top:1px solid var(--line);padding:7px 2px;cursor:pointer;font-size:.93em}
+.rel:hover{background:var(--chip)}
+.rel b{font-weight:650}
+.tag{display:inline-block;font-size:.78em;border-radius:6px;padding:0 6px;color:#fff;margin-right:5px;font-weight:600;line-height:1.6}
+.t-good{background:var(--e-good)} .t-bad{background:var(--e-bad)} .t-part{background:var(--e-part)} .t-link{background:var(--e-link)} .t-evid{background:var(--e-evid)}
+.tag.inf{background:none;color:var(--muted);border:1px dashed var(--muted);font-style:italic}
+.tag.ev-m{background:none;color:var(--ink);border:1px solid var(--ink)}
+.tag.ev-s{background:none;color:var(--accent);border:1px dotted var(--accent)}
+.tag.ev-v{background:var(--chip);color:var(--muted);border:1px solid var(--line)}
+.evnote{font-size:.9em;color:var(--muted);margin:6px 0}
+.step{font-size:.82em;color:var(--muted)}
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+.text{max-width:860px;margin:0 auto;padding:8px 16px 70px}
+.text h2{font-size:1.12em;margin:26px 0 6px}
+.text .ch{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:10px 0}
+.text .ch h3{margin:4px 0;font-size:1em}
+.text .zh{font-size:1em;margin:18px 0 6px;color:var(--zc)}
+.text details.nd{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--zc);border-radius:8px;padding:6px 12px;margin:8px 0}
+.text details.nd summary{cursor:pointer}
+.text details.nd summary b{font-weight:650}
+.text .nd .oneline{color:var(--muted);font-size:.92em}
+.text details.nd h3{font-size:.8em;color:var(--muted);letter-spacing:.04em;margin:16px 0 4px;font-weight:700}
+.text details.nd p{margin:6px 0}
+.text ol,.text ul{margin:4px 0;padding-left:1.4em}
+.text li{margin:3px 0}
+#checkbox{position:fixed;left:12px;bottom:12px;z-index:20;max-width:520px;max-height:60vh;overflow:auto;background:var(--card);border:2px solid var(--e-bad);border-radius:10px;padding:10px 14px;font-size:.85em;white-space:pre-wrap}
+@media (max-width:700px){
+  #chains{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  #chains .btn,#chains .lab{flex:none}
+  .lgd[open]{display:block;width:100%}
+  .lgd[open] summary{display:inline-block}
+  .legend{display:flex;gap:8px;font-size:.72em;margin:6px 0 0}
+  #wrap{height:calc(100vh - 215px)}
+  .drawer{top:auto;left:0;width:auto;height:68vh;border-left:none;border-top:1px solid var(--line);border-radius:14px 14px 0 0;transform:translateY(105%);box-shadow:0 -8px 24px rgba(0,0,0,.16)}
+}
+@media (prefers-reduced-motion: reduce){.drawer{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1 id="ttl"></h1>
+  <p class="sub" id="meta"></p>
+  <div class="row" id="chains"></div>
+  <div class="row">
+    <button class="btn" id="bAll">显示全部</button>
+    <button class="btn" id="bOut" aria-label="缩小">−</button><button class="btn" id="bIn" aria-label="放大">+</button><button class="btn" id="bFit">适应宽度</button>
+    <details class="lgd" id="lgd"><summary>图例</summary><span class="legend" id="legend"></span></details>
+  </div>
+</div>
+
+<div id="wrap"><svg id="map" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+<aside class="drawer" id="drawer" aria-hidden="true"><button class="x" id="dx" aria-label="关闭">×</button><div id="db"></div></aside>
+
+<div class="text" id="text">
+  <h2>文字版</h2>
+  <p class="sub">和上面的图是同一份内容。手机上读这里更方便：先看关系链，再按需点开知识点。</p>
+  <div id="tnotes"></div>
+  <h2>关系链</h2>
+  <div id="tchains"></div>
+  <h2>知识点详解</h2>
+  <div id="tnodes"></div>
+</div>
+
+<script id="kmap-data" type="application/json">__KMAP_DATA__</script>
+<script>
+(function(){
+'use strict';
+const D = JSON.parse(document.getElementById('kmap-data').textContent);
+const NS = 'http://www.w3.org/2000/svg';
+const KIND = {good:'解决 · 改进 · 擅长', bad:'问题 · 局限 · 败在', part:'组成 · 步骤 · 用到', link:'互补 · 对比 · 同类', evid:'证据 · 衡量 · 验证'};
+const EV = {'实测':['m', '实验测出来的结果'], '模拟':['s', '计算、仿真或理论估计的值，还没有实验测到'], '设想':['v', '作者提出的方向或设计，还没有做出来']};
+const svg = document.getElementById('map'), wrap = document.getElementById('wrap');
+const drawer = document.getElementById('drawer'), db = document.getElementById('db');
+const byId = {}, eById = {}, zById = {}, adj = {};
+D.zones.forEach(z => { zById[z.id] = z; });
+D.nodes.forEach(n => { byId[n.id] = n; adj[n.id] = []; });
+D.edges.forEach(e => { eById[e.id] = e; adj[e.from].push(e); adj[e.to].push(e); });
+let scale = 1, chain = -1, step = 0, dragged = false;
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+function el(t, a, p){ const x = document.createElementNS(NS, t); for (const k in a) x.setAttribute(k, a[k]); if (p) p.appendChild(x); return x; }
+function zc(z){ return 'var(--z' + z.color + ')'; }
+
+// ---------- 画图 ----------
+function build(){
+  svg.setAttribute('viewBox', '0 0 ' + D.W + ' ' + D.H);
+  const defs = el('defs', {}, svg);
+  Object.keys(KIND).forEach(k => {
+    const m = el('marker', {id:'ar-' + k, viewBox:'0 0 10 10', refX:9, refY:5, markerWidth:9, markerHeight:9, markerUnits:'userSpaceOnUse', orient:'auto'}, defs);
+    el('path', {d:'M0,0 L10,5 L0,10 z', 'class':'mk-' + k}, m);
+  });
+  const gZ = el('g', {}, svg), gE = el('g', {}, svg), gN = el('g', {}, svg);
+  D.zones.forEach(z => {
+    const g = el('g', {'class':'zone', style:'--zc:' + zc(z)}, gZ);
+    el('rect', {x:z.x, y:z.y, width:z.w, height:z.h, rx:16}, g);
+    const end = z.align === 'end';
+    const t = el('text', end ? {x:z.x + z.w - 14, y:z.y + 27, 'text-anchor':'end'} : {x:z.x + 14, y:z.y + 27}, g);
+    t.textContent = z.title;
+    if (z.sub){ const p = el('tspan', {'class':'zp', dx:10}, t); p.textContent = z.sub; }
+    z.tEl = t;
+  });
+  D.edges.forEach(e => {
+    const g = el('g', {'class':'edge k-' + e.kind + (e.inf ? ' inf' : ''), 'data-e':e.id}, gE);
+    el('path', {'class':'v', d:e.d, 'marker-end':'url(#ar-' + e.kind + ')'}, g);
+    el('path', {'class':'hit', d:e.d}, g);
+    const t = el('text', {x:e.lx, y:e.ly, dy:'0.35em', 'text-anchor':'middle'}, g);
+    t.textContent = e.label;
+    const b = t.getBBox();
+    e.bgEl = el('rect', {'class':'lbg', x:b.x - 3, y:b.y - 1, width:b.width + 6, height:b.height + 2, rx:4});
+    g.insertBefore(e.bgEl, t);
+    e.g = g; e.lab = t;
+    g.addEventListener('click', ev => { ev.stopPropagation(); focusEdge(e.id); });
+  });
+  D.nodes.forEach(n => {
+    const z = zById[n.zone];
+    const g = el('g', {'class':'node' + (n.bg ? ' bg' : ''), 'data-id':n.id, style:'--zc:' + zc(z), transform:'translate(' + n.x + ',' + n.y + ')', tabindex:0, role:'button', 'aria-label':n.title}, gN);
+    el('rect', {'class':'box', x:-n.w / 2, y:-n.h / 2, width:n.w, height:n.h, rx:10}, g);
+    el('rect', {'class':'bar', x:-n.w / 2, y:-n.h / 2 + 8, width:4, height:n.h - 16, rx:2}, g);
+    const t = el('text', {'class':'t', 'text-anchor':'middle', y:-5}, g); t.textContent = n.title;
+    const s = el('text', {'class':'s', 'text-anchor':'middle', y:14}, g); s.textContent = n.sub;
+    n.g = g; n.tEl = t; n.sEl = s;
+    g.addEventListener('click', ev => { ev.stopPropagation(); focusNode(n.id); });
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); focusNode(n.id); } });
+  });
+  svg.addEventListener('click', () => { if (!dragged) clearAll(); });
+}
+
+// ---------- 面板 ----------
+function openDrawer(html){ db.innerHTML = html; drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); drawer.scrollTop = 0; bindDrawer(); }
+function closeDrawer(){ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true'); }
+function bindDrawer(){
+  db.querySelectorAll('[data-e]').forEach(r => { r.onclick = () => focusEdge(r.getAttribute('data-e')); });
+  db.querySelectorAll('[data-n]').forEach(r => { r.onclick = () => focusNode(r.getAttribute('data-n')); });
+}
+function srcHtml(list){
+  return '<ul class="src">' + list.map(s => '<li><span class="sk">' + esc(s.kind || '原文') + '</span>' + esc(s.name) + ' · ' + esc(s.loc) +
+    (s.quote ? '<br><span class="q">“' + esc(s.quote) + '”</span>' : '') + '</li>').join('') + '</ul>';
+}
+function evTag(x){ return EV[x] ? '<span class="tag ev-' + EV[x][0] + '" title="' + EV[x][1] + '">' + x + '</span>' : ''; }
+function evNote(x){ return EV[x] ? '<p class="evnote">' + evTag(x) + '证据等级：' + EV[x][1] + '。</p>' : ''; }
+function tagHtml(e){ return '<span class="tag t-' + e.kind + '">' + esc(e.label) + '</span>' + (e.inf ? '<span class="tag inf">推断</span>' : '') + evTag(e.ev); }
+function relHtml(e){
+  return '<div class="rel" data-e="' + esc(e.id) + '">' + tagHtml(e) + '<b>' + esc(byId[e.from].title) + ' → ' + esc(byId[e.to].title) + '</b><div>' + e.text + '</div></div>';
+}
+function nodeHtml(n, inText){
+  const z = zById[n.zone];
+  let h = '';
+  if (!inText) h += '<div class="dz" style="--zc:' + zc(z) + '">' + esc(z.title) + '</div><h2>' + esc(n.title) + '</h2><p class="one">' + n.one + '</p>';
+  if (n.bg) h += '<p class="bgnote">背景知识：原文默认读者已经会，没有展开讲。下面的解释都是补充的。</p>';
+  h += evNote(n.ev) + '<h3>详细解释</h3>' + n.detail;
+  if (n.more) h += '<details class="more"><summary>例子、公式和细节</summary>' + n.more + '</details>';
+  if (n.src.length) h += '<h3>原文依据</h3>' + srcHtml(n.src);
+  if (n.sup) h += '<div class="sup"><h3>补充：原文没有写</h3>' + n.sup + '</div>';
+  return h;
+}
+function clearHi(){
+  svg.classList.remove('dim');
+  D.nodes.forEach(n => n.g.classList.remove('hi', 'sel'));
+  D.edges.forEach(e => e.g.classList.remove('hi', 'cur'));
+}
+function clearAll(){ clearHi(); chain = -1; syncChainBtns(); closeDrawer(); }
+function lightEdge(e, cur){ e.g.classList.add('hi'); if (cur) e.g.classList.add('cur'); byId[e.from].g.classList.add('hi'); byId[e.to].g.classList.add('hi'); }
+function focusNode(id){
+  const n = byId[id]; if (!n) return;
+  clearHi(); chain = -1; syncChainBtns(); svg.classList.add('dim');
+  n.g.classList.add('hi', 'sel');
+  adj[id].forEach(e => lightEdge(e, false));
+  const rels = adj[id];
+  openDrawer(nodeHtml(n, false) + '<h3>和它相连的关系（' + rels.length + ' 条，点一条看清楚）</h3>' + rels.map(relHtml).join(''));
+  reveal(n.x, n.y, false);
+}
+function focusEdge(eid){
+  const e = eById[eid]; if (!e) return;
+  const A = byId[e.from], B = byId[e.to];
+  clearHi(); chain = -1; syncChainBtns(); svg.classList.add('dim'); lightEdge(e, true);
+  let h = '<div class="dz">一条关系 · ' + KIND[e.kind] + '</div><h2>' + tagHtml(e) + '</h2><p><b>' + esc(A.title) + '</b> → <b>' + esc(B.title) + '</b></p><p>' + e.text + '</p>' + evNote(e.ev);
+  h += e.inf ? '<p class="infnote">这条关系是推断的：原文没有直接这样说。</p>' : '<h3>原文依据</h3>' + srcHtml(e.src);
+  h += '<div class="nav"><button class="btn" data-n="' + esc(A.id) + '">看「' + esc(A.title) + '」</button><button class="btn" data-n="' + esc(B.id) + '">看「' + esc(B.title) + '」</button></div>';
+  openDrawer(h);
+  reveal((A.x + B.x) / 2, (A.y + B.y) / 2, false);
+}
+function showChain(ci, st){
+  const c = D.chains[ci]; if (!c) return;
+  chain = ci; step = st; syncChainBtns(); clearHi(); svg.classList.add('dim');
+  c.edges.forEach((id, k) => { if (k <= st) lightEdge(eById[id], k === st); });
+  const e = eById[c.edges[st]], A = byId[e.from], B = byId[e.to], last = st === c.edges.length - 1;
+  let h = '<p class="step">关系链 ' + (ci + 1) + '：' + esc(c.title) + ' · 第 ' + (st + 1) + ' / ' + c.edges.length + ' 步</p>';
+  if (st === 0 && c.intro) h += '<p>' + c.intro + '</p>';
+  h += '<h2>' + esc(A.title) + ' → ' + esc(B.title) + '</h2><p>' + tagHtml(e) + e.text + '</p>';
+  h += '<div class="nav"><button class="btn" id="sp"' + (st === 0 ? ' disabled' : '') + '>← 上一步</button><button class="btn on" id="sn">' +
+       (last ? (ci < D.chains.length - 1 ? '看完了，下一条链 →' : '看完了') : '下一步 →') + '</button></div>';
+  h += '<p class="step">键盘：← → 翻步，Esc 退出。</p>';
+  openDrawer(h);
+  document.getElementById('sp').onclick = prevStep;
+  document.getElementById('sn').onclick = nextStep;
+  reveal((A.x + B.x) / 2, (A.y + B.y) / 2, true);
+}
+function nextStep(){ const c = D.chains[chain]; if (!c) return; if (step < c.edges.length - 1) showChain(chain, step + 1); else if (chain < D.chains.length - 1) showChain(chain + 1, 0); else clearAll(); }
+function prevStep(){ if (chain >= 0 && step > 0) showChain(chain, step - 1); }
+function syncChainBtns(){ document.querySelectorAll('#chains .btn').forEach((b, i) => b.classList.toggle('on', i === chain)); }
+
+// 把图上的一个点挪到面板没挡住的那块区域里
+function reveal(x, y, always){
+  let vw = wrap.clientWidth, vh = wrap.clientHeight;
+  if (drawer.classList.contains('open')){
+    const wr = wrap.getBoundingClientRect();
+    if (matchMedia('(max-width:700px)').matches) vh = Math.max(120, Math.min(vh, innerHeight - drawer.offsetHeight - wr.top));
+    else vw = Math.max(160, Math.min(vw, innerWidth - drawer.offsetWidth - wr.left));
+  }
+  const sx = x * scale - wrap.scrollLeft, sy = y * scale - wrap.scrollTop;
+  if (!always && sx > 60 && sx < vw - 60 && sy > 40 && sy < vh - 40) return;
+  wrap.scrollTo({left:x * scale - vw / 2, top:y * scale - vh / 2, behavior:'smooth'});
+}
+
+// ---------- 缩放和拖动 ----------
+function applyScale(){ svg.setAttribute('width', D.W * scale); svg.setAttribute('height', D.H * scale); }
+function zoom(f){
+  const cx = (wrap.scrollLeft + wrap.clientWidth / 2) / scale, cy = (wrap.scrollTop + wrap.clientHeight / 2) / scale;
+  scale = Math.min(2, Math.max(0.3, scale * f)); applyScale();
+  wrap.scrollLeft = cx * scale - wrap.clientWidth / 2; wrap.scrollTop = cy * scale - wrap.clientHeight / 2;
+}
+function fit(){ scale = Math.min(1.1, Math.max(0.3, (wrap.clientWidth - 6) / D.W)); applyScale(); }
+(function(){
+  let down = false, sx, sy, sl, st;
+  wrap.addEventListener('mousedown', e => { down = true; dragged = false; sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop; });
+  addEventListener('mousemove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) + Math.abs(dy) > 4){ dragged = true; wrap.classList.add('drag'); }
+    if (dragged){ wrap.scrollLeft = sl - dx; wrap.scrollTop = st - dy; }
+  });
+  addEventListener('mouseup', () => { down = false; wrap.classList.remove('drag'); setTimeout(() => { dragged = false; }, 0); });
+})();
+
+// ---------- 页头、图例、文字版 ----------
+function notesHtml(){
+  return '<div class="dz">关于这张图</div><h2>说明</h2>' + D.notes + '<h3>依据的材料</h3><ul class="src">' +
+    D.sources.map(s => '<li><span class="sk">' + esc(s.kind || '原文') + '</span>' + esc(s.name) + '</li>').join('') + '</ul>';
+}
+function header(){
+  document.getElementById('ttl').textContent = D.title;
+  const srcs = D.sources.map(s => (s.kind ? s.kind + ' ' : '') + s.name).join('；').replace(/[。；，\s]+$/, '');
+  document.getElementById('meta').innerHTML = (D.intro || '') + '依据：' + esc(srcs) + '。点知识点看详细解释，点连线看这条关系。<a href="#text">文字版</a>' +
+    (D.notes ? ' · <a href="#" id="nlink">说明</a>' : '');
+  if (D.notes) document.getElementById('nlink').onclick = ev => { ev.preventDefault(); clearHi(); chain = -1; syncChainBtns(); openDrawer(notesHtml()); };
+  const ch = document.getElementById('chains');
+  if (D.chains.length){
+    ch.innerHTML = '<span class="lab">按关系链一步步看：</span>';
+    D.chains.forEach((c, i) => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = (i + 1) + ' ' + c.title; b.onclick = () => showChain(i, 0); ch.appendChild(b); });
+  } else ch.remove();
+  const used = new Set(D.edges.map(e => e.kind));
+  let lg = Object.keys(KIND).filter(k => used.has(k)).map(k => '<span><i style="border-color:var(--e-' + k + ')' + (k === 'bad' ? ';border-top-style:dashed' : '') + '"></i>' + KIND[k] + '</span>').join('');
+  if (D.edges.some(e => e.inf)) lg += '<span><em>斜体虚框</em>推断的关系</span>';
+  if (D.nodes.some(n => n.bg)) lg += '<span><span class="lgbox"></span>背景知识（补充的）</span>';
+  if (D.nodes.some(n => n.ev) || D.edges.some(e => e.ev)) lg += '<span>' + Object.keys(EV).map(evTag).join('') + '证据等级</span>';
+  document.getElementById('legend').innerHTML = lg;
+  // 宽屏直接展开图例；窄屏收成一个“图例”按钮，省出看图的地方
+  document.getElementById('lgd').open = !matchMedia('(max-width:700px)').matches;
+}
+function textVersion(){
+  if (D.notes) document.getElementById('tnotes').innerHTML = '<h2>说明</h2>' + D.notes;
+  const tc = document.getElementById('tchains');
+  if (!D.chains.length) tc.innerHTML = '<p class="sub">这张图没有设关系链。</p>';
+  D.chains.forEach((c, i) => {
+    tc.insertAdjacentHTML('beforeend', '<div class="ch"><h3>' + (i + 1) + '. ' + esc(c.title) + '</h3>' + (c.intro ? '<p>' + c.intro + '</p>' : '') +
+      '<ol>' + c.edges.map(id => { const e = eById[id]; return '<li>' + tagHtml(e) + e.text + '</li>'; }).join('') + '</ol></div>');
+  });
+  const tn = document.getElementById('tnodes');
+  D.zones.forEach(z => {
+    const ns = D.nodes.filter(n => n.zone === z.id).sort((a, b) => a.y - b.y || a.x - b.x);
+    if (!ns.length) return;
+    tn.insertAdjacentHTML('beforeend', '<h3 class="zh" style="--zc:' + zc(z) + '">' + esc(z.title) + '</h3>');
+    ns.forEach(n => {
+      const out = D.edges.filter(e => e.from === n.id);
+      tn.insertAdjacentHTML('beforeend', '<details class="nd" style="--zc:' + zc(z) + '"><summary><b>' + esc(n.title) + '</b><br><span class="oneline">' + n.one + '</span></summary>' +
+        nodeHtml(n, true) + (out.length ? '<h3>它指向的关系</h3><ul>' + out.map(e => '<li>' + tagHtml(e) + e.text + '</li>').join('') + '</ul>' : '') + '</details>');
+    });
+  });
+}
+
+// ---------- 版面检查：check.py 和地址后加 #check 时用 ----------
+// 行内公式和紧挨着的标点被拆到两行：把文字版全部展开，逐个量。check.py 在桌面和手机两种宽度下各量一次
+window.kmapMathWrap = function(){
+  const CLOSE = /^[。，、；：！？）】」』”’》〉.,;:!?)\]]/, OPEN = /[（【「『“‘《〈(\[]$/;
+  const shut = [...document.querySelectorAll('#text details:not([open])')];
+  shut.forEach(d => { d.open = true; });
+  const found = [], rg = document.createRange();
+  const apart = (m, t, i) => {
+    rg.setStart(t, i); rg.setEnd(t, i + 1);
+    const c = rg.getBoundingClientRect(), r = m.getBoundingClientRect(), y = (c.top + c.bottom) / 2;
+    return y < r.top || y > r.bottom;
+  };
+  document.querySelectorAll('#text math').forEach(m => {
+    if (m.closest('.mblock')) return;
+    const box = m.closest('details.nd, .ch'), where = box ? box.querySelector('summary b, h3').textContent : '';
+    const a = m.previousSibling, b = m.nextSibling;
+    if (b && b.nodeType === 3 && CLOSE.test(b.data) && apart(m, b, 0)) found.push(where + '：公式后的“' + b.data[0] + '”被折到下一行');
+    if (a && a.nodeType === 3 && OPEN.test(a.data) && apart(m, a, a.data.length - 1)) found.push(where + '：公式前的“' + a.data.slice(-1) + '”留在上一行');
+  });
+  shut.forEach(d => { d.open = false; });
+  return found;
+};
+window.kmapCheck = function(){
+  const pad = 3, ov = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  const box = r => ({l:r.x, r:r.x + r.width, t:r.y, b:r.y + r.height});
+  const out = {nodeOverlap:[], edgeThroughNode:[], labelNode:[], labelLabel:[], labelEdge:[], zoneTitle:[], textOverflow:[], outsideZone:[], mathError:[]};
+  const R = D.nodes.map(n => ({id:n.id, l:n.x - n.w / 2 - pad, r:n.x + n.w / 2 + pad, t:n.y - n.h / 2 - pad, b:n.y + n.h / 2 + pad}));
+  for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) if (ov(R[i], R[j])) out.nodeOverlap.push(R[i].id + ' 和 ' + R[j].id);
+  const samples = {}, seen = new Set();
+  D.edges.forEach(e => {
+    const p = e.g.querySelector('path.v'), L = p.getTotalLength(); samples[e.id] = [];
+    for (let s = 0; s <= L; s += 3){
+      const q = p.getPointAtLength(s); samples[e.id].push(q);
+      R.forEach(r => {
+        if (r.id === e.from || r.id === e.to) return;
+        if (q.x > r.l && q.x < r.r && q.y > r.t && q.y < r.b){ const k = '关系 ' + e.id + '（' + e.from + ' → ' + e.to + '）穿过 ' + r.id; if (!seen.has(k)){ seen.add(k); out.edgeThroughNode.push(k); } }
+      });
+    }
+  });
+  const LB = D.edges.map(e => Object.assign({id:e.id}, box(e.bgEl.getBBox())));
+  LB.forEach(l => R.forEach(r => { if (ov(l, r)) out.labelNode.push('关系 ' + l.id + ' 的文字压到 ' + r.id); }));
+  for (let i = 0; i < LB.length; i++) for (let j = i + 1; j < LB.length; j++) if (ov(LB[i], LB[j])) out.labelLabel.push('关系 ' + LB[i].id + ' 和 ' + LB[j].id + ' 的文字');
+  LB.forEach(l => D.edges.forEach(e => {
+    if (e.id === l.id) return;
+    if (samples[e.id].some(q => q.x > l.l + 2 && q.x < l.r - 2 && q.y > l.t + 2 && q.y < l.b - 2)) out.labelEdge.push('关系 ' + e.id + ' 的线穿过关系 ' + l.id + ' 的文字');
+  }));
+  D.zones.forEach(z => {
+    const tb = box(z.tEl.getBBox()); tb.l -= 2; tb.r += 2; tb.t -= 2; tb.b += 2;
+    D.edges.forEach(e => { if (samples[e.id].some(q => q.x > tb.l && q.x < tb.r && q.y > tb.t && q.y < tb.b)) out.zoneTitle.push('关系 ' + e.id + ' 的线穿过分区标题 ' + z.id); });
+    LB.forEach(l => { if (ov(l, tb)) out.zoneTitle.push('关系 ' + l.id + ' 的文字压到分区标题 ' + z.id); });
+    R.forEach(r => { if (ov(r, tb)) out.zoneTitle.push(r.id + ' 压到分区标题 ' + z.id); });
+  });
+  D.nodes.forEach(n => {
+    const w = Math.max(n.tEl.getComputedTextLength(), n.sEl.getComputedTextLength());
+    if (w > n.w - 14) out.textOverflow.push(n.id + '：字宽 ' + Math.round(w) + '，框宽 ' + Math.round(n.w));
+    const z = zById[n.zone];
+    if (n.x - n.w / 2 < z.x + 4 || n.x + n.w / 2 > z.x + z.w - 4 || n.y - n.h / 2 < z.y + 38 || n.y + n.h / 2 > z.y + z.h - 4) out.outsideZone.push(n.id + ' 超出分区 ' + z.id);
+  });
+  document.querySelectorAll('merror').forEach(m => out.mathError.push((m.closest('details,.ch,section') || m.parentNode).textContent.slice(0, 60)));
+  out.mathWrap = window.kmapMathWrap();
+  out.total = Object.keys(out).reduce((a, k) => a + (Array.isArray(out[k]) ? out[k].length : 0), 0);
+  return out;
+};
+
+// ---------- 启动 ----------
+header();
+build();
+textVersion();
+document.getElementById('bAll').onclick = clearAll;
+document.getElementById('bIn').onclick = () => zoom(1.2);
+document.getElementById('bOut').onclick = () => zoom(1 / 1.2);
+document.getElementById('bFit').onclick = fit;
+document.getElementById('dx').onclick = clearAll;
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') clearAll();
+  else if (chain >= 0 && e.key === 'ArrowRight') nextStep();
+  else if (chain >= 0 && e.key === 'ArrowLeft') prevStep();
+});
+scale = Math.min(1.1, Math.max(0.6, (wrap.clientWidth - 6) / D.W)); applyScale();
+window.kmapFocusNode = focusNode; window.kmapShowChain = showChain;
+window.kmapSetScale = s => { scale = s; applyScale(); };
+const hash = decodeURIComponent(location.hash.slice(1));
+if (hash.startsWith('n=') && byId[hash.slice(2)]) focusNode(hash.slice(2));
+if (hash === 'check'){
+  const r = kmapCheck(), box = document.createElement('div'); box.id = 'checkbox';
+  const lines = Object.keys(r).filter(k => Array.isArray(r[k]) && r[k].length).map(k => k + '：\n  ' + r[k].join('\n  '));
+  box.textContent = r.total ? '版面检查发现 ' + r.total + ' 处问题\n' + lines.join('\n') : '版面检查：没有问题';
+  document.body.appendChild(box);
+}
+window.kmapReady = true;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+# 示例图：数据文件的写法范例，也是改模板以后的回归测试。
+# 生成：python scripts/build.py examples/demo.kmap.toml -o <临时目录>/demo.html
+title = "示例 · 检索增强生成的骨架"
+intro = "一张只有五个知识点的小图，用来演示写法。"
+mode = "paper"
+notes = "这张图只用来演示写法，内容按论文简化过。"
+
+[[sources]]
+id = "S1"
+name = "Lewis et al. 2020, Retrieval-Augmented Generation"
+kind = "论文"
+
+[[zones]]
+id = "bg"
+title = "① 先懂这些"
+grid = [0, 0]
+size = [1, 2]
+
+[[zones]]
+id = "prob"
+title = "② 研究问题"
+grid = [1, 0]
+size = [1, 2]
+
+[[zones]]
+id = "method"
+title = "③ 本文方法"
+sub = "§2"
+grid = [2, 0]
+size = [2, 2]
+
+[[nodes]]
+id = "softmax"
+zone = "bg"
+pos = [0, 0]
+title = "softmax"
+sub = "把分数变成概率"
+one = "把一组任意实数变成一组加起来等于 1 的正数。"
+background = true
+detail = '''
+**是什么：** 一个把"分数"变成"概率"的函数。输入一组分数 $s_1, \dots, s_n$，输出同样多个概率，每个都在 0 和 1 之间，加起来正好等于 1。
+
+**怎么算：** 每个分数先取指数，再除以所有指数的总和。取指数保证结果是正数，除以总和保证加起来是 1。
+
+**为什么需要它：** 检索器给每段材料打的是相关度分数，大小没有固定范围。换成概率以后，才能当作"信任程度"去给每段材料的意见加权。
+'''
+more = '''
+$$p_i = \frac{e^{s_i}}{\sum_{j=1}^{n} e^{s_j}}$$
+
+$p_i$ 是第 $i$ 段材料的概率，$s_i$ 是它的分数，$n$ 是一共有几段。例：分数 (2.0, 1.0, 0.5) 变成概率约 (0.63, 0.23, 0.14)。
+'''
+
+[[nodes]]
+id = "hallu"
+zone = "prob"
+pos = [0, 1]
+title = "模型会编造"
+sub = "知识冻结 · 无出处"
+one = "只靠训练时记住的知识回答，会说错，而且说不出依据。"
+detail = '''
+**是什么：** 大语言模型的知识存在模型参数里，训练完就固定了。被问到训练后才出现的事、或者训练时就没记牢的细节，它仍然会给出一个听起来很自信的答案，这就是"编造"（hallucination）。
+
+**为什么是问题：** 用户分不清哪句是真的。模型也给不出出处，没法核对。
+
+**别混淆：** 编造不是模型"故意撒谎"，而是它只会生成"看起来像答案"的文字。
+'''
+src = [{ s = "S1", loc = "§1", quote = "hallucinations" }]
+
+[[nodes]]
+id = "retr"
+zone = "method"
+pos = [0, 0]
+title = "检索器"
+sub = "按相关度取前 k 段"
+one = "从资料库里找出和问题最相关的 k 段材料。"
+detail = '''
+**是什么：** 一个专门"找资料"的模型。它把问题和资料库里的每段材料都变成向量，用点积 $\mathbf{q}^\top\mathbf{d}$ 量两者有多接近，取最接近的 k 段。
+
+**为什么需要它：** 有了它，回答前先查资料，答案就能有依据，资料更新了也不用重新训练整个模型。
+
+**别混淆：** 检索器只负责"找"，不负责"写"。写答案的是生成器。
+'''
+src = [{ s = "S1", loc = "§2.2", quote = "retrieve the top-k documents" }]
+sup = '''
+点积就是两个向量对应位置相乘再相加，方向越一致，结果越大。
+'''
+
+[[nodes]]
+id = "gen"
+zone = "method"
+pos = [1, 1]
+title = "生成器"
+sub = "读着材料写答案"
+one = "一个语言模型，把问题和检索到的材料一起读，再写出答案。"
+detail = '''
+**是什么：** 就是一个大语言模型，只是输入里除了问题，还多了检索器找来的 k 段材料。
+
+**怎么运作：** 它一个词一个词地写答案。每写一个词，都参考问题、材料和已经写出的部分。
+
+**为什么这样设计：** 答案的事实来自材料，模型只负责把它们组织成通顺的句子，编造的空间就小了。
+'''
+src = [{ s = "S1", loc = "§2.3" }]
+
+[[nodes]]
+id = "recall"
+zone = "method"
+pos = [0, 1]
+title = "Recall@k"
+sub = "对的材料进没进前 k"
+one = "正确的材料有没有出现在检索器取出的前 k 段里。"
+detail = '''
+**是什么：** 衡量检索器好坏的指标。对一组测试问题，看正确的材料有多大比例出现在前 k 段里。
+
+**为什么最重要：** 生成器只看得到前 k 段。正确材料没进前 k，生成器再强也用不上它。所以答案错了，先查 Recall@k。
+
+**别混淆：** Recall@k 只管"有没有找到"，不管找到的材料排第几。
+'''
+src = [{ s = "S1", loc = "§4.1, Table 1" }]
+
+[[edges]]
+id = 1
+from = "hallu"
+to = "retr"
+label = "先查再答 → 缓解"
+kind = "good"
+text = "模型会编造，所以先用检索器找材料，再让模型照着材料回答。原文的实验显示，这样写出的文字比只靠参数的模型更符合事实（摘要，§1）。"
+src = [{ s = "S1", loc = "摘要, §1", quote = "more specific, diverse and factual language" }]
+evidence = "实测"
+
+[[edges]]
+id = 2
+from = "softmax"
+to = "retr"
+label = "把分数变概率"
+kind = "part"
+text = "检索器用 softmax 把相关度分数变成概率，当作每段材料的权重。这一点原文写在公式里，没有单独讲。"
+inferred = true
+
+[[edges]]
+id = 3
+from = "retr"
+to = "gen"
+label = "交给前 k 段"
+kind = "part"
+text = "检索器把前 k 段材料交给生成器，生成器读着它们写答案（§2.1，Fig. 1）。"
+src = [{ s = "S1", loc = "§2.1, Fig. 1" }]
+
+[[edges]]
+id = 4
+from = "recall"
+to = "retr"
+label = "衡量"
+kind = "evid"
+text = "Recall@k 衡量检索器有没有把正确材料放进前 k 段（§4.1）。"
+src = [{ s = "S1", loc = "§4.1" }]
+
+[[chains]]
+title = "从问题到答案"
+intro = "先说为什么要检索，再看材料怎么流到答案里。"
+edges = [1, 3]

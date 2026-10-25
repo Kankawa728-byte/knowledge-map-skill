@@ -1,0 +1,63 @@
+# quote 核对的回归测试。quote_case.txt 模仿从 PDF 抽出来的文字：
+# 有引用角标、行末连字符、原文的拼写错误、抽成连在一起的上标、fi 连字和中文。
+# 改了 build.py 的 quote 核对以后运行：
+#   python scripts/build.py examples/quote_case.kmap.toml --text examples/quote_case.txt -o <临时目录>/q.html
+# 应当正好报 3 条“quote 在原文里找不到”，都在节点 bad 上；节点 good 的 6 条一条也不该报。
+title = "quote 核对测试"
+
+[[sources]]
+id = "S"
+name = "测试"
+kind = "测试"
+
+[[zones]]
+id = "z"
+title = "① 测试"
+grid = [0, 0]
+size = [2, 1]
+
+[[nodes]]
+id = "good"
+zone = "z"
+pos = [0, 0]
+title = "照抄的"
+sub = "测试"
+one = "这些 quote 都是原文原句，只是写法和抽出来的文字不完全一样。"
+background = true
+detail = '''
+这个节点只用来测试 quote 核对。六条 quote 依次对应：原文夹着引用角标、原文在行末用连字符断开、原文拼错了一个词、原文的上标被抽成了连在一起的数字、原文用了 fi 连字、中文原文。它们都应当算找到。
+'''
+src = [
+  { s = "S", loc = "1", quote = "more than 98% of bacteria and some yeast strains are also nonculturable" },
+  { s = "S", loc = "2", quote = "wavenumbers associated with greater decrease in classification accuracy" },
+  { s = "S", loc = "3", quote = "fine-tuned model achieved 99% identification accuracy" },
+  { s = "S", loc = "4", quote = "enhance Raman scattering by 10^4−10^10 times" },
+  { s = "S", loc = "5", quote = "five different aspect ratios" },
+  { s = "S", loc = "6", quote = "先从资料库里找出相关段落" },
+]
+
+[[nodes]]
+id = "bad"
+zone = "z"
+pos = [1, 0]
+title = "改写的"
+sub = "测试"
+one = "这些 quote 不是原文原句，应当报找不到。"
+background = true
+detail = '''
+这个节点只用来测试 quote 核对。三条 quote 依次是：把原文的意思改写成别的英文、把原文翻译成中文、短短几个词里换掉了一个词。它们都应当报“quote 在原文里找不到”，因为读者拿着它们回原文对不上。
+'''
+src = [
+  { s = "S", loc = "1", quote = "most bacteria cannot be grown in the lab and culturing is slow" },
+  { s = "S", loc = "2", quote = "超过 98% 的细菌无法在实验室培养" },
+  { s = "S", loc = "3", quote = "benefits of low speed" },
+]
+
+[[edges]]
+id = 1
+from = "good"
+to = "bad"
+label = "对照"
+kind = "link"
+text = "左边照抄，右边改写，用来对照 quote 核对的结果。"
+inferred = true
