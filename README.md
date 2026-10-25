@@ -3,7 +3,9 @@
 把课件、讲义、录播字幕或论文画成能点着看的知识关系图。
 Turn lecture slides, notes, lecture transcripts or papers into an interactive knowledge map.
 
-[中文](#中文) · [English](#english)
+![用一篇单细胞拉曼综述做的关系图 · A knowledge map made from a review paper on single-cell Raman spectroscopy](docs/images/01-open.png)
+
+[中文](#中文) · [English](#english) · [图文教程 · Illustrated walkthrough](docs/tutorial.md)
 
 ---
 
@@ -64,6 +66,8 @@ cmd /c rmdir "$HOME\.agents\skills\knowledge-map"
 ```
 
 ### 使用方法
+
+第一次用的话，先看[图文教程](docs/tutorial.md)。它跟着一次真实的运行，从提请求一步一步演示到看图和改图。
 
 **做一张图**
 
@@ -248,6 +252,8 @@ cmd /c rmdir "$HOME\.agents\skills\knowledge-map"
 ```
 
 ### Usage
+
+If this is your first time, start with the [illustrated walkthrough](docs/tutorial.md). It follows one real run step by step, from the request to viewing and editing the map.
 
 **Make a map**
 
